@@ -67,6 +67,9 @@ type TextFormatter struct {
 	// The keys sorting function, when uninitialized it uses sort.Strings.
 	SortingFunc func([]string)
 
+	// If provided, this function is used to render non-string values instead of the standard fmt.Sprint approach
+	RenderFunc func(value interface{}) string
+
 	// Disables the truncation of the level text to 4 characters.
 	DisableLevelTruncation bool
 
@@ -328,7 +331,11 @@ func (f *TextFormatter) appendKeyValue(b *bytes.Buffer, key string, value interf
 func (f *TextFormatter) appendValue(b *bytes.Buffer, value interface{}) {
 	stringVal, ok := value.(string)
 	if !ok {
-		stringVal = fmt.Sprint(value)
+		if f.RenderFunc != nil {
+			stringVal = f.RenderFunc(value)
+		} else {
+			stringVal = fmt.Sprint(value)
+		}
 	}
 
 	if !f.needsQuoting(stringVal) {

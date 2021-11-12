@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -597,4 +598,26 @@ func TestCustomSorting(t *testing.T) {
 	b, err := formatter.Format(entry)
 	require.NoError(t, err)
 	require.True(t, strings.HasPrefix(string(b), "prefix="), "format output is %q", string(b))
+}
+
+func TestCustomRenderFunc(t *testing.T) {
+	formatter := &TextFormatter{
+		RenderFunc: func(value interface{}) string {
+			return spew.Sprintf("%#v", value)
+		},
+	}
+
+	entry := &Entry{
+		Message: "Testing custom render function",
+		Time:    time.Now(),
+		Level:   InfoLevel,
+		Data: Fields{
+			"str": "str123",
+			"num": 5,
+		},
+	}
+	b, err := formatter.Format(entry)
+	require.NoError(t, err)
+	require.True(t, strings.Contains(string(b), `level=info msg="Testing custom render function" num="(int)5" str=str123`),
+		"format output is %q", string(b))
 }
